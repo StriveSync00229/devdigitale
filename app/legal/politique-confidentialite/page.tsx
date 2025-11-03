@@ -338,7 +338,7 @@ export default function PolitiqueConfidentialitePage() {
                     <h3 className="font-semibold text-slate-900 mb-2">Autorité de contrôle</h3>
                     <p className="text-slate-700">
                       Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation
-                      auprès de notre assistant support :<br /
+                      auprès de notre assistant support :<br />
                        République du Bénin
                       <br />
                       Email: contact@devdigitale.com
