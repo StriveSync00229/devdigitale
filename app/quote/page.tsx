@@ -12,12 +12,38 @@ import { servicesData } from "@/lib/data"
 import { Upload, ArrowRight, ArrowLeft, CheckCircle, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
+// Ajout interface QuoteFormData
+interface QuoteFormData {
+  lastName: string;
+  firstName: string;
+  email: string;
+  phone: string;
+  country: string;
+  customCountry: string;
+  city: string;
+  address: string;
+  profileType: string;
+  occupation: string;
+  companyName: string;
+  employeeCount: string;
+  serviceType: string;
+  projectDescription: string;
+  currency: string;
+  hasBudget: string;
+  budgetAmount: string;
+  entrepreneurSector: string;
+  companySector: string;
+  contactPreferences: string[];
+  position: string;
+}
+
 export default function QuotePage() {
-  const [currentStep, setCurrentStep] = useState(1)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [currentStep, setCurrentStep] = useState<number>(1)
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const { toast } = useToast()
 
-  const [formData, setFormData] = useState({
+  // Utilisation du typage propre QuoteFormData
+  const [formData, setFormData] = useState<QuoteFormData>({
     lastName: "",
     firstName: "",
     email: "",
@@ -41,12 +67,14 @@ export default function QuotePage() {
     position: "",
   })
 
-  const [errors, setErrors] = useState({})
+  // Typage errors pour qu'il accepte toutes les clés du formulaire et string supplémentaire
+  const [errors, setErrors] = useState<Partial<Record<keyof QuoteFormData | string, string>>>({})
 
   const totalSteps = 4
 
-  const validateStep = (step) => {
-    const newErrors = {}
+  // Correction des typages
+  const validateStep = (step: number) => {
+    const newErrors: Partial<Record<keyof QuoteFormData | string, string>> = {}
 
     if (step === 1) {
       if (!formData.lastName) newErrors.lastName = "Le nom est requis"
@@ -103,7 +131,7 @@ export default function QuotePage() {
     }
   }
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!validateStep(currentStep)) return
 
@@ -120,7 +148,8 @@ export default function QuotePage() {
       if (response.ok) {
         toast({
           title: "Demande envoyée !",
-          description: "Nous vous recontacterons sous 24h.",
+          description: "Nous vous recontacterons sous 24h. Vérifiez également votre boîte mail pour le récapitulatif.",
+          duration: 6000,
         })
         // Reset form
         setFormData({

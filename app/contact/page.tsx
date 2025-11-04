@@ -42,7 +42,9 @@ export default function ContactPage() {
 
       if (response.ok) {
         setSubmitStatus("success")
-        e.currentTarget.reset()
+        if (e.currentTarget && typeof e.currentTarget.reset === "function") {
+          e.currentTarget.reset()
+        }
         setSelectedSubject("")
         setCustomSubject("")
       } else {

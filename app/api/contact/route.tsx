@@ -11,11 +11,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Tous les champs sont requis" }, { status: 400 })
     }
 
+    console.log('[CONTACT] Données reçues :', body)
     // Create transporter
     const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT as string, 10),
+      secure: process.env.EMAIL_PORT === '465', // true pour SSL
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
