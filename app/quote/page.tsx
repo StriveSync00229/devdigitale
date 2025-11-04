@@ -41,6 +41,7 @@ export default function QuotePage() {
   const [currentStep, setCurrentStep] = useState<number>(1)
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const { toast } = useToast()
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false)
 
   // Utilisation du typage propre QuoteFormData
   const [formData, setFormData] = useState<QuoteFormData>({
@@ -146,12 +147,7 @@ export default function QuotePage() {
       })
 
       if (response.ok) {
-        toast({
-          title: "Demande envoyée !",
-          description: "Nous vous recontacterons sous 24h. Vérifiez également votre boîte mail pour le récapitulatif.",
-          duration: 6000,
-        })
-        // Reset form
+        setShowSuccessScreen(true);
         setFormData({
           lastName: "",
           firstName: "",
@@ -188,6 +184,18 @@ export default function QuotePage() {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  if (showSuccessScreen) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50">
+        <div className="bg-white shadow-xl rounded-lg p-8 max-w-xl text-center">
+          <h2 className="text-3xl font-bold mb-4 text-green-700">Demande bien prise en compte !</h2>
+          <p className="text-lg mb-6">Merci pour votre demande de devis.<br />Un expert de notre équipe vous contactera sous peu.<br />Un e-mail récapitulatif vient également de vous être envoyé.</p>
+          <a href="/" className="inline-block mt-4 bg-blue-600 text-white font-semibold rounded px-6 py-3 hover:bg-blue-700 transition">Retour à l'accueil</a>
+        </div>
+      </div>
+    )
   }
 
   return (
