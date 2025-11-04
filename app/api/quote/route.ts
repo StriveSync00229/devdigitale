@@ -4,10 +4,13 @@ import nodemailer from "nodemailer"
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
+    console.log('[DEMANDE DE DEVIS] Données reçues :', data)
 
-    // Configuration du transporteur email
+    // Nouvelle config: SMTP Hostinger
     const transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: process.env.EMAIL_HOST,
+      port: parseInt(process.env.EMAIL_PORT as string, 10),
+      secure: process.env.EMAIL_PORT === '465', // SSL pour 465, sinon TLS
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
@@ -49,24 +52,27 @@ export async function POST(request: NextRequest) {
     `
 
     // Envoi de l'email interne (équipe)
-    await transporter.sendMail({
+    const mailEquipe = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: "contact@devdigitale.com", // Changed to DevDigitale
       subject: `Nouvelle demande de devis - DevDigitale - ${data.firstName} ${data.lastName}`, // Changed to DevDigitale
       text: emailContent,
     })
+    console.log('[DEMANDE DE DEVIS] Mail équipe envoyé:', mailEquipe.messageId);
 
     // Accusé de réception au client
-    await transporter.sendMail({
+    const mailClient = await transporter.sendMail({
       from: 'no-reply@devdigitale.com',
       to: data.email,
       subject: 'DevDigitale - Confirmation de votre demande de devis',
       text: `Bonjour ${data.firstName},\n\nNous avons bien reçu votre demande de devis et vous remercions de votre intérêt.\nNotre équipe vous recontactera sous 24h ouvrées.\n\nRécapitulatif: \n- Service: ${data.serviceType}\n- Devise: ${data.currency}${data.budgetAmount ? `\n- Budget: ${data.budgetAmount} ${data.currency}` : ''}\n\nCeci est un email automatique, merci de ne pas répondre.\n\n— DevDigitale`,
     })
+    console.log('[DEMANDE DE DEVIS] Accusé client envoyé:', mailClient.messageId);
 
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Erreur lors de l'envoi de l'email:", error)
+    if (error instanceof Error) console.error(error.stack)
     return NextResponse.json({ error: "Erreur lors de l'envoi" }, { status: 500 })
   }
 }
