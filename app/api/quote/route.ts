@@ -3,7 +3,40 @@ import nodemailer from "nodemailer"
 
 export async function POST(request: NextRequest) {
   try {
-    const data = await request.json()
+    let data, files = [];
+    let isMultipart = false;
+
+    const contentType = request.headers.get('content-type') || '';
+    if (contentType.includes('multipart/form-data')) {
+      isMultipart = true;
+      const formData = await request.formData();
+      data = {} as Record<string, any>;
+      for (const [key, value] of formData.entries()) {
+        if (key === 'attachments') {
+          files.push(value);
+        } else {
+          // tente de parser JSON pour array/objets (checkbox etc.)
+          try {
+            data[key] = typeof value === 'string' && (value.startsWith('[') || value.startsWith('{')) ? JSON.parse(value) : value;
+          } catch {
+            data[key] = value;
+          }
+        }
+      }
+      console.log('FICHIERS JOINTS:', files);
+      for (const [i, file] of files.entries()) {
+        if (typeof file === 'object' && 'name' in file && 'size' in file) {
+          console.log(`[API QUOTE] Fichier[${i}] name: ${file.name}, size: ${file.size}`);
+        } else {
+          console.log(`[API QUOTE] Fichier[${i}] (type inconnu):`, file);
+        }
+      }
+      for (const [key, value] of Object.entries(data)) {
+        console.log(`[API QUOTE] Champ reçu '${key}':`, value);
+      }
+    } else {
+      data = await request.json();
+    }
     console.log('[DEMANDE DE DEVIS] Données reçues :', data)
 
     // Nouvelle config: SMTP Hostinger
@@ -51,12 +84,27 @@ export async function POST(request: NextRequest) {
       Date de la demande: ${new Date().toLocaleString("fr-FR")}
     `
 
+    // Préparer attachements nodemailer pour l'équipe
+    let equipeAttachments = [];
+    if (isMultipart && files.length > 0) {
+      for (let f of files) {
+        if (typeof f === 'object' && 'arrayBuffer' in f) {
+          const arrBuf = await f.arrayBuffer();
+          equipeAttachments.push({
+            filename: f.name || 'document.pdf',
+            content: Buffer.from(arrBuf),
+          });
+        }
+      }
+    }
+
     // Envoi de l'email interne (équipe)
     const mailEquipe = await transporter.sendMail({
       from: process.env.EMAIL_USER,
       to: "contact@devdigitale.com", // Changed to DevDigitale
       subject: `Nouvelle demande de devis - DevDigitale - ${data.firstName} ${data.lastName}`, // Changed to DevDigitale
       text: emailContent,
+      attachments: equipeAttachments, // <= joindre fichiers s'il y en a
     })
     console.log('[DEMANDE DE DEVIS] Mail équipe envoyé:', mailEquipe.messageId);
 

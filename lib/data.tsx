@@ -162,6 +162,70 @@ export interface Project {
   }
 }
 
+// Liste des nouvelles images spécifiques à la catégorie dev web
+const devWebImages = [
+  '/images/p3.jpg',
+  '/images/p4.jpg',
+  '/images/p5.jpg',
+]
+let devWebIdx = 0;
+
+// Liste des nouvelles images pour Digital Marketing
+const digitalMarketingImages = [
+  '/images/p6.jpg',
+  '/images/p7.jpg',
+  '/images/p8.jpg',
+]
+let digitalMarketingIdx = 0;
+
+// Liste des nouvelles images pour Video & Animation
+const videoAnimationImages = [
+  '/images/p9.jpg',
+  '/images/p10.jpg',
+  '/images/p11.jpg',
+]
+let videoAnimationIdx = 0;
+
+// Liste des nouvelles images pour Writing & Translation
+const writingTranslationImages = [
+  '/images/p12.jpg',
+  '/images/p13.jpg',
+  '/images/p14.jpg',
+]
+let writingTranslationIdx = 0;
+
+// Liste des nouvelles images pour Music & Audio
+const musicAudioImages = [
+  '/images/p15.jpg',
+  '/images/p16.jpg',
+  '/images/p17.jpg',
+]
+let musicAudioIdx = 0;
+
+// Liste corrigée pour AI Services : extension .jpeg
+const aiServicesImages = [
+  '/images/p18.jpeg',
+  '/images/p19.jpeg',
+  '/images/p20.jpeg',
+]
+let aiServicesIdx = 0;
+
+// Ajout des images pour Business & Consulting
+const businessConsultingImages = [
+  '/images/p21.png',
+  '/images/p22.png',
+  '/images/p23.jpeg',
+]
+let businessConsultingIdx = 0;
+
+// Images pour la catégorie Projets de bout en bout
+const projetsBoutEnBoutImages = [
+  '/images/p24.png',
+  '/images/p25.jpeg',
+  '/images/p26.jpeg',
+]
+let projetsBoutEnBoutIdx = 0;
+
 export const projectsData: Project[] = [
   // Design & Créativité
   {
@@ -1309,8 +1373,6 @@ export const projectsData: Project[] = [
     ],
     results: ["Lancement produit réussi", "Précommandes +250%", "Viralité sur réseaux sociaux"],
   },
-
-  // Writing & Translation (categoryId: 5)
   {
     id: 45,
     title: "Stratégie Contenu 'B2B SaaS Platform'",
@@ -2562,7 +2624,33 @@ export const projectsData: Project[] = [
     ],
     results: ["25 franchises ouvertes", "5000 membres actifs", "Expansion 10 villes"],
   },
-]
+].map((project) => {
+  if ((project.categoryId === 2 || project.category === 'Programming & Développement web') && devWebIdx < devWebImages.length) {
+    return { ...project, image: devWebImages[devWebIdx++] }
+  }
+  if ((project.categoryId === 3 || project.category === 'Digital Marketing') && digitalMarketingIdx < digitalMarketingImages.length) {
+    return { ...project, image: digitalMarketingImages[digitalMarketingIdx++] }
+  }
+  if ((project.categoryId === 4 || project.category === 'Video & Animation') && videoAnimationIdx < videoAnimationImages.length) {
+    return { ...project, image: videoAnimationImages[videoAnimationIdx++] }
+  }
+  if ((project.categoryId === 5 || project.category === 'Writing & Translation') && writingTranslationIdx < writingTranslationImages.length) {
+    return { ...project, image: writingTranslationImages[writingTranslationIdx++] }
+  }
+  if ((project.categoryId === 6 || project.category === 'Music & Audio') && musicAudioIdx < musicAudioImages.length) {
+    return { ...project, image: musicAudioImages[musicAudioIdx++] }
+  }
+  if ((project.categoryId === 7 || project.category === 'AI Services') && aiServicesIdx < aiServicesImages.length) {
+    return { ...project, image: aiServicesImages[aiServicesIdx++] }
+  }
+  if ((project.categoryId === 8 || project.category === 'Business & Consulting') && businessConsultingIdx < businessConsultingImages.length) {
+    return { ...project, image: businessConsultingImages[businessConsultingIdx++] }
+  }
+  if ((project.categoryId === 9 || project.category === 'Projets de bout en bout') && projetsBoutEnBoutIdx < projetsBoutEnBoutImages.length) {
+    return { ...project, image: projetsBoutEnBoutImages[projetsBoutEnBoutIdx++] }
+  }
+  return project
+})
 
 export interface User {
   id: number

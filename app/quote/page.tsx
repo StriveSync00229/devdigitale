@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -42,6 +42,7 @@ export default function QuotePage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
   const { toast } = useToast()
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Utilisation du typage propre QuoteFormData
   const [formData, setFormData] = useState<QuoteFormData>({
@@ -70,6 +71,9 @@ export default function QuotePage() {
 
   // Typage errors pour qu'il accepte toutes les clés du formulaire et string supplémentaire
   const [errors, setErrors] = useState<Partial<Record<keyof QuoteFormData | string, string>>>({})
+
+  // Ajouter état pour les fichiers joints après formData/erreurs
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([])
 
   const totalSteps = 4
 
@@ -137,14 +141,29 @@ export default function QuotePage() {
     if (!validateStep(currentStep)) return
 
     setIsSubmitting(true)
+    let response: Response | undefined = undefined;
     try {
-      const response = await fetch("/api/quote", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      })
+      if (attachedFiles.length > 0) {
+        const fd = new FormData()
+        for (const [key, value] of Object.entries(formData)) {
+          fd.append(key, typeof value === "object" ? JSON.stringify(value) : value ?? "")
+        }
+        attachedFiles.forEach((file, idx) => fd.append("attachments", file))
+        // DEBUG LOG: voir ce qu'on envoie côté front
+        for (let pair of fd.entries()) {
+          console.log('FormData >>', pair[0], pair[1])
+        }
+        response = await fetch("/api/quote", { method: "POST", body: fd })
+      } else {
+        console.log('JSON envoyé >>', formData)
+        response = await fetch("/api/quote", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        })
+      }
 
       if (response.ok) {
         setShowSuccessScreen(true);
@@ -175,13 +194,18 @@ export default function QuotePage() {
       } else {
         throw new Error("Erreur lors de l'envoi")
       }
-    } catch (error) {
+    } catch (err) {
+      let msg = 'Une erreur inconnue s\'est produite.'
+      if (err instanceof Error) msg = err.message
+      // Lecture du texte de réponse API si (response && !response.ok)
+      if (response && !response.ok) {
+        try { msg = (await response.json()).error || msg } catch {}
+      }
       toast({
-        title: "Erreur",
-        description: "Une erreur est survenue. Veuillez réessayer.",
+        title: "Erreur lors de l'envoi",
+        description: msg,
         variant: "destructive",
       })
-    } finally {
       setIsSubmitting(false)
     }
   }
@@ -576,18 +600,54 @@ export default function QuotePage() {
 
                     <div className="space-y-2">
                       <Label className="text-base font-semibold">Fichiers joints</Label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+                      <div
+                        className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors relative cursor-pointer"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
                         <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                         <div className="space-y-2">
                           <p className="text-lg font-medium">Glissez-déposez vos fichiers ici</p>
                           <p className="text-sm text-muted-foreground">
-                            ou <span className="text-blue-600 font-medium cursor-pointer">parcourez</span> vos fichiers
+                            ou <span className="text-blue-600 font-medium">parcourez</span> vos fichiers
                           </p>
                           <p className="text-xs text-muted-foreground">
                             PDF, images (JPG, PNG) - Maximum 10MB par fichier
                           </p>
                         </div>
-                        <Input type="file" multiple className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                        <input
+                          type="file"
+                          multiple
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          style={{ display: "none" }}
+                          name="attachments" // POUR LE POST VERS API
+                          ref={fileInputRef}
+                          onChange={(e) => {
+                            if (!e.target.files) return
+                            let files = Array.from(e.target.files)
+                            setAttachedFiles((prev) => [...prev, ...files].slice(0, 5))
+                          }}
+                        />
+                        {/* Drag&Drop (optionnelle pour le drag) */}
+                        <div
+                          className="absolute inset-0 cursor-pointer"
+                          onDragOver={e => e.preventDefault()}
+                          onDrop={e => {
+                            e.preventDefault()
+                            const files = Array.from(e.dataTransfer.files)
+                            setAttachedFiles((prev) => [...prev, ...files].slice(0, 5))
+                          }}
+                        />
+                        {/* Visualisation des fichiers joints */}
+                        {attachedFiles.length > 0 && (
+                          <div className="mt-4 space-y-1 text-left">
+                            {attachedFiles.map((file, idx) => (
+                              <div key={file.name+idx} className="flex items-center gap-2 bg-blue-50 p-2 rounded text-blue-900 text-sm">
+                                <span className="truncate max-w-xs">{file.name} ({(file.size/1024/1024).toFixed(2)} Mo)</span>
+                                <button type="button" className="text-red-600 hover:underline ml-2 text-xs" onClick={() => setAttachedFiles(attachedFiles.filter((_, i) => i !== idx))}>Retirer</button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
